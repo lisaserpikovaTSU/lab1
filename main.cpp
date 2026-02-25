@@ -1,19 +1,26 @@
 #include <QCoreApplication>
+#include <QString>
+#include <QTextStream>
+#include <QDirIterator>
 
-int main(int argc, char *argv[])
+int main()
 {
-    QCoreApplication a(argc, argv);
+    QTextStream cin(stdin);
+    QTextStream cout(stdout);
 
-    // Set up code that uses the Qt event loop here.
-    // Call a.quit() or a.exit() to quit the application.
-    // A not very useful example would be including
-    // #include <QTimer>
-    // near the top of the file and calling
-    // QTimer::singleShot(5000, &a, &QCoreApplication::quit);
-    // which quits the application after 5 seconds.
+    QString root_inp;
+    cout << "Введите путь до папки для шифрования: ";
+    cout.flush();
+    root_inp = cin.readLine();
 
-    // If you do not need a running Qt event loop, remove the call
-    // to a.exec() or use the Non-Qt Plain C++ Application template.
+    if (QDir(root_inp).exists()) {
+        cout << "Путь найден :)";
+        //обойти папку
+    } else {
+        cout << "Путь введен некорректно или такого пути не существует :(";
+    }
 
-    return a.exec();
+    return 0;
+    //return a.exec();
 }
+
