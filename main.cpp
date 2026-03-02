@@ -8,45 +8,29 @@
 QTextStream cin(stdin);
 QTextStream cout(stdout);
 
-void print_attribs(QFileInfo& info, QTextStream& stream) {
-    if (info.isReadable())
-        cout << "R";
-    if (info.isWritable())
-        cout << "W";
-    if (info.isHidden())
-        cout << "H";
-    if (info.isExecutable())
-        cout << "E";
-}
-
-QString fileSize(qint64 nSize) {
-    qint64 i = 0;
-    for (; nSize > 1023; nSize /= 1024, ++i) { }
-    return QString().setNum(nSize) + "BKMGT"[i];
-}
-
-void folderTraverse(QString& path) {
+void folderTraverse(QString& path, int depth = 0) {
     QDirIterator itDirs(path, QDir::Dirs);
-    while (itDirs.hasNext()) {
-        itDirs.next();
-
-        if (itDirs.fileName() == ".") continue;
-
-        QFileInfo info = itDirs.fileInfo();
-        cout << "D | " << info.fileName() << " | " << fileSize(info.size())
-             << " | " << info.lastModified().toString() << " | ";
-        print_attribs(info, cout);
-        cout << Qt::endl;
-    }
+    QString tab = QString("  ").repeated(depth);
 
     QDirIterator itFiles(path, QDir::Files);
     while (itFiles.hasNext()) {
         itFiles.next();
         QFileInfo info = itFiles.fileInfo();
-        cout << "F | " << info.fileName() << " | " << fileSize(info.size()) << " | "
-               << info.lastModified().toString() << " | ";
-        print_attribs(info, cout);
+        cout << tab << "F | " << info.fileName();
         cout << "\n";
+    }
+
+    while (itDirs.hasNext()) {
+        itDirs.next();
+
+        if (itDirs.fileName() == "." || itDirs.fileName() == "..") continue;
+
+        QFileInfo info = itDirs.fileInfo();
+        cout << tab << "D | " << info.fileName();
+        cout << Qt::endl;
+
+        QString nextPath = info.filePath();
+        folderTraverse(nextPath, depth+1);
     }
 }
 
