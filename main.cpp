@@ -10,7 +10,7 @@ void folderTraverse(QDir& folder) {
 
 }
 
-QDir getValidDir() {
+QString getValidDir() {
     QString path;
     cout << "Enter path for folder to encrypt: ";
     cout.flush();
@@ -29,13 +29,13 @@ QDir getValidDir() {
 
     cout << "Path found :)" << Qt::endl;
 
-    return folder;
+    return path;
 }
 
 int main()
 {
-    QDir folder = getValidDir();
-    folderTraverse(folder);
+    QString path = getValidDir();
+    folderTraverse(path);
 
     return 0;
     // /Users/liza/Desktop/ТехнЧтение/
