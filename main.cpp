@@ -2,12 +2,36 @@
 #include <QString>
 #include <QTextStream>
 #include <QDirIterator>
+#include <QFileInfo>
+#include <QDateTime>
 
 QTextStream cin(stdin);
 QTextStream cout(stdout);
 
-void folderTraverse(QDir& folder) {
+void folderTraverse(QString& path, int depth = 0) {
+    QDirIterator itDirs(path, QDir::Dirs);
+    QString tab = QString("  ").repeated(depth);
 
+    QDirIterator itFiles(path, QDir::Files);
+    while (itFiles.hasNext()) {
+        itFiles.next();
+        QFileInfo info = itFiles.fileInfo();
+        cout << tab << "F | " << info.fileName();
+        cout << "\n";
+    }
+
+    while (itDirs.hasNext()) {
+        itDirs.next();
+
+        if (itDirs.fileName() == "." || itDirs.fileName() == "..") continue;
+
+        QFileInfo info = itDirs.fileInfo();
+        cout << tab << "D | " << info.fileName();
+        cout << Qt::endl;
+
+        QString nextPath = info.filePath();
+        folderTraverse(nextPath, depth+1);
+    }
 }
 
 QString getValidDir() {
@@ -38,7 +62,8 @@ int main()
     folderTraverse(path);
 
     return 0;
-    // /Users/liza/Desktop/ТехнЧтение/
+    // /Users/liza/Desktop/Учебные/
+
     //return a.exec();
 }
 
