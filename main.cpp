@@ -3,24 +3,42 @@
 #include <QTextStream>
 #include <QDirIterator>
 
-int main()
-{
-    QTextStream cin(stdin);
-    QTextStream cout(stdout);
+QTextStream cin(stdin);
+QTextStream cout(stdout);
 
-    QString root_inp;
+void folderTraverse(QDir& folder) {
+
+}
+
+QDir getValidDir() {
+    QString path;
     cout << "Введите путь до папки для шифрования: ";
     cout.flush();
-    root_inp = cin.readLine();
+    path = cin.readLine();
 
-    if (QDir(root_inp).exists()) {
-        cout << "Путь найден :)";
-        //обойти папку
-    } else {
-        cout << "Путь введен некорректно или такого пути не существует :(";
+    QDir folder(path);
+    bool valid = false;
+
+    while (!folder.exists()) {
+        cout << "Путь введен некорректно или такого пути не существует :(" << Qt::endl;
+        cout << "Попробуйте ещё раз: ";
+        cout.flush();
+        path = cin.readLine();
+        folder = QDir(path);
     }
 
+    cout << "Путь найден :)" << Qt::endl;
+
+    return folder;
+}
+
+int main()
+{
+    QDir folder = getValidDir();
+    folderTraverse(folder);
+
     return 0;
+    // /Users/liza/Desktop/ТехнЧтение/
     //return a.exec();
 }
 
