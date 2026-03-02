@@ -12,7 +12,7 @@ void folderTraverse(QDir& folder) {
 
 QDir getValidDir() {
     QString path;
-    cout << "Введите путь до папки для шифрования: ";
+    cout << "Enter path for folder to encrypt: ";
     cout.flush();
     path = cin.readLine();
 
@@ -20,14 +20,14 @@ QDir getValidDir() {
     bool valid = false;
 
     while (!folder.exists()) {
-        cout << "Путь введен некорректно или такого пути не существует :(" << Qt::endl;
-        cout << "Попробуйте ещё раз: ";
+        cout << "Path is incorrect or there is no such path :(" << Qt::endl;
+        cout << "Try again: ";
         cout.flush();
         path = cin.readLine();
         folder = QDir(path);
     }
 
-    cout << "Путь найден :)" << Qt::endl;
+    cout << "Path found :)" << Qt::endl;
 
     return folder;
 }
