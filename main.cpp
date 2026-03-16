@@ -4,7 +4,9 @@
 #include <QDirIterator>
 #include <QFileInfo>
 #include <QDateTime>
-#include <openssl/aes.h
+#include <openssl/aes.h>
+#include <stdexcept>
+#include <cryptfiledevice.h>
 
 QTextStream cin(stdin);
 QTextStream cout(stdout);
@@ -43,6 +45,19 @@ anderseraso_symmetricDecryption(int keySize, unsigned char ciphertext[]) {
     return mtext;
 }
 
+anderseraso_hashing(const unsigned char* data, size_t dataSize) { // Calculate the hash
+    unsigned char hash[dataSize];
+    if (md5(data, dataSize, hash) != 0) {
+        throw std::runtime_error("Failed to calculate hash");
+    }
+
+    return hash;
+}
+
+void encrypt(const QString& path) {
+
+}
+
 void folderTraverse(QString& path, int depth = 0) {
     QDirIterator itDirs(path, QDir::Dirs);
     QString tab = QString("  ").repeated(depth);
@@ -78,7 +93,6 @@ QString getValidDir() {
     path = cin.readLine();
 
     QDir folder(path);
-    bool valid = false;
 
     while (!folder.exists()) {
         cout << "Path is incorrect or there is no such path :(" << Qt::endl;
@@ -91,11 +105,7 @@ QString getValidDir() {
     cout << "Path found :)" << Qt::endl;
 
     return path;
-}
-
-void encrypt(const QString& path) {
-
-}
+} 
 
 int main()
 {

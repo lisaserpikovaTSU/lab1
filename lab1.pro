@@ -13,3 +13,7 @@ SOURCES += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+INCLUDEPATH += C:/Qt/Tools/mingw810_64/opt/include
+INCLUDEPATH += H:/Documents/lab1/crypt
+LIBS += -LC:/Qt/Tools/mingw810_64/opt/lib -lssl -lcrypto
