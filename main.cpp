@@ -5,10 +5,12 @@
 #include <QFileInfo>
 #include <QDateTime>
 #include <openssl/aes.h>
+#include <openssl/rand.h>
 #include <stdexcept>
 #include "cryptfiledevice.h"
 #include <QRandomGenerator>
 #include <QDebug>
+#include <QTemporaryFile>
 
 QTextStream cin(stdin);
 QTextStream cout(stdout);
@@ -28,8 +30,78 @@ QByteArray generateRandomData(int size) {
 
 void encrypt(const QString& path) {
     QFile toEncrypt(path);
+    if (!toEncrypt.open(QIODevice::ReadOnly)) {
+        qDebug() << "error opening file to encrypt " << path;
+        return;
+    }
+
+    QTemporaryFile tempFile;
+    if (!tempFile.open()) {
+        qDebug() << "error creating temp file " << path;
+        return;
+    }
+    QString tempPath = tempFile.fileName();
+    tempFile.close();
+
     QByteArray salt = generateRandomData(16);
-    CryptFileDevice cryptFileDevice(&toEncrypt, "password", salt);
+
+    QFile tempFileDevice(tempPath);
+    CryptFileDevice cryptFileDevice(&tempFileDevice, "password", salt);
+
+    if (!cryptFileDevice.open(QIODevice::WriteOnly)) {
+        qDebug() << "Cannot open crypt device for:" << path;
+        toEncrypt.close();
+        return;
+    }
+
+    const qint64 BUFFER_SIZE = 8192;
+    QByteArray buffer;
+    qint64 totalWritten = 0;
+
+    while (!toEncrypt.atEnd()) {
+        buffer = toEncrypt.read(BUFFER_SIZE);
+        qint64 written = cryptFileDevice.write(buffer);
+        if (written != buffer.size()) {
+            qDebug() << "error encrypting file " << path;
+            toEncrypt.close();
+            cryptFileDevice.close();
+            return;
+        }
+        totalWritten += written;
+    }
+
+    toEncrypt.close();
+    cryptFileDevice.close();
+
+    QFile tempFileForSalt(tempPath);
+    if (!tempFileForSalt.open(QIODevice::ReadWrite)) {
+        qDebug() << "error opening for salt" << path;
+        return;
+    }
+
+    QByteArray encryptedData = tempFileForSalt.readAll();
+    tempFileForSalt.close();
+
+    if (!tempFileForSalt.open(QIODevice::WriteOnly)) {
+        qDebug() << "error reopening for salt" << path;
+        return;
+    }
+
+    tempFileForSalt.write(salt);
+    tempFileForSalt.write(encryptedData);
+    tempFileForSalt.close();
+
+    if (!QFile::remove(path)) {
+        qDebug() << "error removing original file";
+        return;
+    }
+
+    if (!QFile::copy(tempPath, path)) {
+        qDebug() << "error copying encrypted file to original";
+        return;
+    }
+
+    qDebug() << "Successfully encrypted:" << path;
 
 }
 
@@ -84,6 +156,7 @@ QString getValidDir() {
 
 int main()
 {
+
     QString path = getValidDir();
     folderTraverse(path);
 
@@ -91,6 +164,7 @@ int main()
 
     return 0;
     // /Users/liza/Desktop/Учебные/
+    // /Users/liza/Desktop/Тестовая/
 
     //return a.exec();
 }

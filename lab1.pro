@@ -18,5 +18,8 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-INCLUDEPATH += C:/Qt/Tools/mingw810_64/opt/include
-LIBS += -LC:/Qt/Tools/mingw810_64/opt/lib -lssl -lcrypto
+#INCLUDEPATH += C:/Qt/Tools/mingw810_64/opt/include
+#LIBS += -LC:/Qt/Tools/mingw810_64/opt/lib -lssl -lcrypto
+
+INCLUDEPATH += /usr/local/opt/openssl@3/include
+LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
