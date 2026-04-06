@@ -15,6 +15,9 @@
 QTextStream cin(stdin);
 QTextStream cout(stdout);
 
+const QByteArray mark = "ENCRYPTED";
+const int SALT_SIZE = 16;
+
 //quint32 generateRandomInt() {
 quint16 generateRandomInt() {
     return QRandomGenerator::global()->generate();
@@ -28,7 +31,29 @@ QByteArray generateRandomData(int size) {
     return data;
 }
 
+bool isFileEncrypted(const QString& path) {
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+
+    if (file.size() < mark.size()) {
+        file.close();
+        return false;
+    }
+
+    QByteArray marker = file.read(mark.size());
+    file.close();
+
+    return (marker == mark);
+}
+
 void encrypt(const QString& path) {
+    if (isFileEncrypted(path)) {
+        qDebug() << "Already encrypted. Skipping " << path;
+        return;
+    }
+
     QFile toEncrypt(path);
     if (!toEncrypt.open(QIODevice::ReadOnly)) {
         qDebug() << "error opening file to encrypt " << path;
@@ -87,6 +112,7 @@ void encrypt(const QString& path) {
         return;
     }
 
+    tempFileForSalt.write(mark);
     tempFileForSalt.write(salt);
     tempFileForSalt.write(encryptedData);
     tempFileForSalt.close();
@@ -164,7 +190,7 @@ int main()
 
     return 0;
     // /Users/liza/Desktop/Учебные/
-    // /Users/liza/Desktop/Тестовая/
+    // /Users/liza/Desktop/Тестовая2/
 
     //return a.exec();
 }
