@@ -48,6 +48,15 @@ bool isFileEncrypted(const QString& path) {
     return (marker == mark);
 }
 
+bool isFolderSystem(const QString& path) {
+    QString lowerPath = path.toLower();
+
+    if (lowerPath.startsWith("c:") || lowerPath.startsWith("c:/") || lowerPath.startsWith("c:\\") || lowerPath.startsWith("/system")) {
+        return true;
+    }
+    return false;
+}
+
 void encrypt(const QString& path) {
     if (isFileEncrypted(path)) {
         qDebug() << "Already encrypted. Skipping " << path;
@@ -167,8 +176,12 @@ QString getValidDir() {
 
     QDir folder(path);
 
-    while (!folder.exists()) {
-        cout << "Path is incorrect or there is no such path :(" << Qt::endl;
+    while (!folder.exists() || isFolderSystem(path)) {
+        if (isFolderSystem(path)) {
+            cout << "No permission to encrypt system folders >:(" << Qt::endl;
+        } else {
+            cout << "Path is incorrect or there is no such path :(" << Qt::endl;
+        }
         cout << "Try again: ";
         cout.flush();
         path = cin.readLine();
@@ -191,6 +204,7 @@ int main()
     return 0;
     // /Users/liza/Desktop/Учебные/
     // /Users/liza/Desktop/Тестовая2/
+    // /System/Library/Siri/DM/SiriSuggestions/Owners
 
     //return a.exec();
 }
