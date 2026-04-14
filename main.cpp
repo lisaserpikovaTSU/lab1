@@ -140,7 +140,7 @@ void encrypt(const QString& path) {
 
 }
 
-void folderTraverse(QString& path, int depth = 0) {
+void folderTraverse(QString& path, QString& action, int depth = 0) {
     QDirIterator itDirs(path, QDir::Dirs);
     QString tab = QString("  ").repeated(depth);
 
@@ -151,7 +151,12 @@ void folderTraverse(QString& path, int depth = 0) {
         cout << tab << "F | " << info.fileName();
         cout << "\n";
 
-        encrypt(info.absoluteFilePath());
+        if (action == "1") {
+            encrypt(info.absoluteFilePath());
+        } else {
+            decrypt(info.absoluteFilePath());
+        }
+
     }
 
     while (itDirs.hasNext()) {
@@ -164,13 +169,13 @@ void folderTraverse(QString& path, int depth = 0) {
         cout << Qt::endl;
 
         QString nextPath = info.filePath();
-        folderTraverse(nextPath, depth+1);
+        folderTraverse(nextPath, action, depth+1);
     }
 }
 
 QString getValidDir() {
     QString path;
-    cout << "Enter path for folder to encrypt: ";
+    cout << "Enter path for folder: ";
     cout.flush();
     path = cin.readLine();
 
@@ -197,12 +202,25 @@ int main()
 {
 
     QString path = getValidDir();
-    folderTraverse(path);
+
+    cout << "1 - for encryption" << Qt::endl;
+    cout << "2 - for decryption" << Qt::endl;
+    cout << "Select action(1 or 2): ";
+    cout.flush();
+
+    QString action = cin.readLine();
+
+    while (action != "1" && action != "2") {
+        cout << "Invalid choice! Please enter 1 or 2: ";
+        cout.flush();
+        action = cin.readLine();
+    }
+
+    folderTraverse(path, action);
 
 
 
     return 0;
-    // /Users/liza/Desktop/Учебные/
     // /Users/liza/Desktop/Тестовая2/
     // /System/Library/Siri/DM/SiriSuggestions/Owners
 
