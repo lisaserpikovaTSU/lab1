@@ -71,7 +71,7 @@ void encrypt(const QString& path) {
 
     QTemporaryFile tempFile;
     if (!tempFile.open()) {
-        qDebug() << "error creating temp file " << path;
+        qDebug() << "error creating temp file";
         return;
     }
     QString tempPath = tempFile.fileName();
@@ -137,6 +137,60 @@ void encrypt(const QString& path) {
     }
 
     qDebug() << "Successfully encrypted:" << path;
+
+}
+
+void decrypt(const QString& path) {
+    if (!isFileEncrypted(path)) {
+        qDebug() << "Is not encrypted. Skipping" << path;
+        return;
+    }
+
+    QFile toDecrypt(path);
+    if (!toDecrypt.open(QIODevice::ReadOnly)) {
+        qDebug() << "error opening file to decrypt " << path;
+        return;
+    }
+
+    QByteArray marker = toDecrypt.read(mark.size());
+    QByteArray salt = toDecrypt.read(SALT_SIZE);
+
+    QByteArray encryptedData = toDecrypt.readAll();
+    toDecrypt.close();
+
+    QTemporaryFile tempFile;
+    tempFile.open();
+    tempFile.write(encryptedData);
+    tempFile.close();
+
+    CryptFileDevice cryptFileDevice(&tempFile, "password", salt);
+    cryptFileDevice.open(QIODevice::ReadOnly);
+
+    const qint64 BUFFER_SIZE = 8192;
+    QByteArray decryptedData;
+    QByteArray buffer;
+
+    while (!cryptFileDevice.atEnd()) {
+        buffer = cryptFileDevice.read(BUFFER_SIZE);
+        decryptedData.append(buffer);
+    }
+
+    cryptFileDevice.close();
+
+    if (decryptedData.isEmpty()) {
+        qDebug() << "Decryption failed (wrong password or corrupted file):" << path;
+        return;
+    }
+
+    QTemporaryFile tempDecryptedFile;
+    tempDecryptedFile.open();
+    tempDecryptedFile.write(decryptedData);
+    tempDecryptedFile.close();
+
+    QFile::remove(path);
+    QFile::copy(tempDecryptedFile.fileName(), path);
+
+    qDebug() << "Successfully decrypted:" << path;
 
 }
 
