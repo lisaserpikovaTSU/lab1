@@ -12,6 +12,7 @@ SOURCES += \
 
 HEADERS += \
         cryptfiledevice.h
+        icrypttool.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
