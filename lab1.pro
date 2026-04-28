@@ -11,7 +11,8 @@ SOURCES += \
         cryptfiledevice.cpp
 
 HEADERS += \
-        cryptfiledevice.h
+        aescrypttool.h \
+        cryptfiledevice.h \
         icrypttool.h
 
 # Default rules for deployment.

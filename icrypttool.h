@@ -1,6 +1,8 @@
 #ifndef ICRYPTTOOL_H
 #define ICRYPTTOOL_H
 
+#include <QString>
+
 class ICryptTool {
 public:
     virtual ~ICryptTool() = default;
