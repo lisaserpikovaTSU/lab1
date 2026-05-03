@@ -3,7 +3,7 @@
 
 #include <QByteArray>
 #include <QString>
-#include "ICryptTool.h"
+#include "icrypttool.h"
 
 class AesCryptTool : public ICryptTool
 {
@@ -25,6 +25,7 @@ private:
     AesCryptTool& operator= (AesCryptTool const&);
 
     QByteArray generateSalt(int size);
+
     bool isFileEncrypted(const QString& path);
     bool isFolderSystem(const QString& path);
 
