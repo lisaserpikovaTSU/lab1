@@ -1,5 +1,4 @@
 #include "aescrypttool.h"
-
 #include <QDir>
 #include <QDirIterator>
 #include <QFile>
@@ -81,6 +80,12 @@ void AesCryptTool::encryptFile(const QString& path, const QString& password){
         return;
     }
 
+    if(toEncrypt.size() == 0) {
+        qDebug() << "File is empty. Skipping" << path;
+        toEncrypt.close();
+        return;
+    }
+
     QTemporaryFile tempFile;
     tempFile.open();
     QString tempPath = tempFile.fileName();
@@ -99,7 +104,6 @@ void AesCryptTool::encryptFile(const QString& path, const QString& password){
 
     const qint64 BUFFER_SIZE = 8192;
     QByteArray buffer;
-    //qint64 totalWritten = 0;
 
     while (!toEncrypt.atEnd()) {
         buffer = toEncrypt.read(BUFFER_SIZE);
@@ -110,7 +114,6 @@ void AesCryptTool::encryptFile(const QString& path, const QString& password){
             cryptFileDevice.close();
             return;
         }
-        //totalWritten += written;
     }
 
     toEncrypt.close();
