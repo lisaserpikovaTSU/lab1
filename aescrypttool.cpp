@@ -160,7 +160,10 @@ void AesCryptTool::decryptFile(const QString& path, const QString& password){
     tempFile.close();
 
     CryptFileDevice cryptFileDevice(&tempFile, password.toUtf8(), salt);
-    cryptFileDevice.open(QIODevice::ReadOnly);
+    if (!cryptFileDevice.open(QIODevice::ReadOnly)) {
+        qDebug() << "Password is incorrect. Decryption is not available!";
+        return;
+    }
 
     const qint64 BUFFER_SIZE = 8192;
     QByteArray decryptedData;
