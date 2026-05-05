@@ -1,0 +1,232 @@
+[
+  {
+    "fields_num": 1,
+    "field": "next"
+  },
+  {
+    "id": 14,
+    "name": "head",
+    "value": "NULL"
+  },
+  {
+    "id": 17,
+    "name": "newNode",
+    "value": "N1"
+  },
+  {
+    "id": 19,
+    "name": "newNode",
+    "f": "next",
+    "value": "NULL"
+  },
+  {
+    "id": 20,
+    "name": "head",
+    "value": "newNode"
+  },
+  {
+    "id": 23,
+    "name": "newNode",
+    "value": "N2"
+  },
+  {
+    "id": 25,
+    "name": "newNode",
+    "f": "next",
+    "value": "head"
+  },
+  {
+    "id": 26,
+    "name": "head",
+    "value": "newNode"
+  },
+  {
+    "id": 31,
+    "name": "newNode",
+    "value": "N3"
+  },
+  {
+    "id": 33,
+    "name": "newNode",
+    "f": "next",
+    "value": {
+      "name": "head",
+      "f": "next"
+    }
+  },
+  {
+    "id": 34,
+    "name": "head",
+    "f": "next",
+    "value": "newNode"
+  },
+  {
+    "id": 39,
+    "name": "temp",
+    "value": "head"
+  },
+  {
+    "id": 40,
+    "name": "head",
+    "value": {
+      "name": "head",
+      "f": "next"
+    }
+  },
+  {
+    "id": 41,
+    "name": "temp",
+    "op": "free"
+  },
+  {
+    "id": 46,
+    "name": "newNode",
+    "value": "N4"
+  },
+  {
+    "id": 48,
+    "name": "newNode",
+    "f": "next",
+    "value": "NULL"
+  },
+  {
+    "id": 50,
+    "name": "current",
+    "value": "head"
+  },
+  {
+    "id": 51,
+    "name": "current",
+    "value": {
+        "name": "current",
+        "f": "next"
+      }
+   },
+  {
+    "id": 52,
+    "name": "current",
+    "f": "next",
+    "value": "newNode"
+  },
+  {
+    "id": 57,
+    "name": "first",
+    "value": "head"
+  },
+  {
+    "id": 58,
+    "name": "second",
+    "value": {
+      "name": "head",
+      "f": "next"
+    }
+  },
+  {
+    "id": 60,
+    "name": "first",
+    "f": "next",
+    "value": {
+      "name": "second",
+      "f": "next"
+    }
+  },
+  {
+    "id": 61,
+    "name": "second",
+    "f": "next",
+    "value": "first"
+  },
+  {
+    "id": 62,
+    "name": "head",
+    "value": "second"
+  },
+  {
+    "id": 68,
+    "name": "current",
+    "value": "head"
+  },
+  {
+    "id": 70,
+         "name": "current",
+      "value": {
+        "name": "current",
+        "f": "next"
+      }
+  },
+{
+    "id": 72,
+         "name": "current",
+      "value": {
+        "name": "current",
+        "f": "next"
+      }
+  },
+{
+    "id": 74,
+         "name": "current",
+      "value": {
+        "name": "current",
+        "f": "next"
+      }
+  },
+  {
+    "id": 78,
+    "name": "current",
+    "value": "head"
+  },
+  {
+    "id": 79,
+    "name": "temp",
+    "value": "current"
+  },
+  {
+    "id": 80,
+    "name": "current",
+    "value": {
+      "name": "current",
+      "f": "next"
+    }
+  },
+  {
+    "id": 81,
+    "name": "temp",
+    "op": "free"
+  },
+  {
+    "id": 82,
+    "name": "temp",
+    "value": "current"
+  },
+  {
+    "id": 83,
+    "name": "current",
+    "value": {
+      "name": "current",
+      "f": "next"
+    }
+  },
+  {
+    "id": 84,
+    "name": "temp",
+    "op": "free"
+  },
+  {
+    "id": 85,
+    "name": "temp",
+    "value": "current"
+  },
+  {
+    "id": 86,
+    "name": "current",
+    "value": {
+      "name": "current",
+      "f": "next"
+    }
+  },
+  {
+    "id": 87,
+    "name": "temp",
+    "op": "free"
+  }
+]

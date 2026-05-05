@@ -1,0 +1,88 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node* next;
+    struct Node* prev;
+};
+
+int main() {
+    struct Node* head = NULL;
+
+    // 1. Добавляем узел со значением 3
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = 3;
+    newNode->next = NULL;
+    newNode->prev = NULL;
+    head = newNode;
+
+    // 2. Добавляем узел со значением 7 в начало
+    newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = 7;
+    newNode->next = head;
+    newNode->prev = NULL;
+    head->prev = newNode;
+    head = newNode;
+
+    // 3. Добавляем узел со значением 1 между 7 и 3
+    newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = 1;
+    newNode->next = head->next;
+    newNode->prev = head;
+    struct Node* current = head->next;
+    current->prev = newNode;
+    head->next = newNode;
+
+    // 4. Удаляем узел со значением 7
+    current = head;
+    head = head->next;
+    head->prev = NULL;
+    free(current);
+
+    // 5. Добавляем узел со значением 5 в конец
+    newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = 5;
+    newNode->next = NULL;
+    
+    current = head;
+    current = current->next;
+
+    current->next = newNode;
+    newNode->prev = current;
+
+    // 6. Меняем местами первый и второй узлы
+    struct Node* first = head;
+    struct Node* second = head->next;
+    first->next = second->next;
+    second->next = first;
+    second->prev = NULL;
+    first->prev = second;
+    current = first->next;
+    current->prev = first;
+    head = second;
+
+    // 7. Выводим список в прямом направлении
+    printf("Список в прямом направлении:\n");
+    current = head;
+    printf("%d ", current->data);
+    current = current->next;
+    printf("%d ", current->data);
+    current = current->next;
+    printf("%d ", current->data);
+    printf("\n");
+
+    // 8. Освобождаем память
+    current = head;
+    head = head->next;
+    free(current);
+    
+    current = head;
+    head = head->next;
+    free(current);
+
+    current = head;
+    free(current);
+
+    return 0;
+}
