@@ -9,6 +9,23 @@
 
 void AesCryptTool::encryptFolder(const QString& path, const QString& password)
 {
+    QDir dir(path);
+
+    if (dir.isEmpty()) {
+        qDebug() << "Directory cannot be empty!";
+        return;
+    }
+
+    if (!dir.exists()) {
+        qDebug() << "Directory does not exist.";
+        return;
+    }
+
+    if (password.isEmpty()) {
+        qDebug() << "Password cannot be empty!";
+        return;
+    }
+
     QDirIterator it(path, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         it.next();
@@ -21,6 +38,18 @@ void AesCryptTool::encryptFolder(const QString& path, const QString& password)
 
 void AesCryptTool::decryptFolder(const QString& path, const QString& password)
 {
+    QDir dir(path);
+
+    if (dir.isEmpty()) {
+        qDebug() << "Directory cannot be empty!";
+        return;
+    }
+
+    if (!dir.exists()) {
+        qDebug() << "Directory does not exist.";
+        return;
+    }
+
     QDirIterator it(path, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         it.next();
@@ -177,7 +206,7 @@ void AesCryptTool::decryptFile(const QString& path, const QString& password){
     cryptFileDevice.close();
 
     if (decryptedData.isEmpty()) {
-        qDebug() << "Decryption failed (wrong password or corrupted file):" << path;
+        qDebug() << "Decryption failed (corrupted file):" << path;
         return;
     }
 
