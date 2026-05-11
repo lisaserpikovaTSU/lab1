@@ -88,12 +88,47 @@ bool AesCryptTool::isFileEncrypted(const QString& path){
     return (marker == MARK);
 }
 
-bool AesCryptTool::isFolderSystem(const QString& path){
+bool AesCryptTool::isFolderSystem(const QString& path) {
     QString lowerPath = path.toLower();
+    QFileInfo pathInfo(path);
+    QString canonicalPath = pathInfo.canonicalFilePath().toLower();
 
-    if (lowerPath.startsWith("c:") || lowerPath.startsWith("c:/") || lowerPath.startsWith("c:\\") || lowerPath.startsWith("/system")) {
+    // Windows
+    if (canonicalPath.startsWith("c:/windows") ||
+        canonicalPath.startsWith("c:\\windows") ||
+        canonicalPath.startsWith("c:/program files") ||
+        canonicalPath.startsWith("c:\\program files") ||
+        canonicalPath.startsWith("c:/program files (x86)") ||
+        canonicalPath.startsWith("c:\\program files (x86)") ||
+        canonicalPath.startsWith("c:/programdata") ||
+        canonicalPath.startsWith("c:\\programdata")) {
         return true;
     }
+
+    // macOS
+    if (canonicalPath.startsWith("/system") ||
+        canonicalPath.startsWith("/library") ||
+        canonicalPath.startsWith("/usr") ||
+        canonicalPath.startsWith("/bin") ||
+        canonicalPath.startsWith("/sbin") ||
+        canonicalPath.startsWith("/private") ||
+        canonicalPath.startsWith("/var") ||
+        canonicalPath.startsWith("/tmp")) {
+        return true;
+    }
+
+    // Linux/Unix
+    if (canonicalPath == "/" ||
+        canonicalPath.startsWith("/boot") ||
+        canonicalPath.startsWith("/dev") ||
+        canonicalPath.startsWith("/proc") ||
+        canonicalPath.startsWith("/sys") ||
+        canonicalPath.startsWith("/etc") ||
+        canonicalPath.startsWith("/root") ||
+        canonicalPath.startsWith("/lost+found")) {
+        return true;
+    }
+
     return false;
 }
 

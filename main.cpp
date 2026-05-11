@@ -46,7 +46,7 @@ int main()
         cout << "Encrypting folder: " << path << Qt::endl;
         tool.encryptFolder(path, password);
     } else {
-        cout << "Decrypting folder: " << "/Users/liza/Desktop/Тестовая2/" << Qt::endl;
+        cout << "Decrypting folder: " << path << Qt::endl;
         tool.decryptFolder(path, password);
     }
 
