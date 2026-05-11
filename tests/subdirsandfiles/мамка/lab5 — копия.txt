@@ -1,0 +1,387 @@
+SYS_EXIT  equ 1
+SYS_READ  equ 3
+SYS_WRITE equ 4
+STDIN     equ 0
+STDOUT    equ 1
+
+%macro write_string 2
+    pusha
+    mov eax, SYS_WRITE
+    mov ebx, STDOUT
+    mov ecx, %1
+    mov edx, %2
+    int 0x80
+    popa
+%endmacro
+
+%macro read_string 2
+    mov eax, SYS_READ
+    mov ebx, STDIN
+    mov ecx, %1
+    mov edx, %2
+    int 0x80
+%endmacro
+
+%macro input_number 1
+    read_string buffer, 20
+    
+    mov esi, buffer    
+    xor eax, eax       
+    xor ebx, ebx       
+    xor ecx, ecx       
+    xor edx, edx       
+
+    %%convert_loop:
+        mov bl, [esi]      
+        cmp bl, 0xA        
+        je %%check_length
+        cmp bl, '-'        
+        je %%negative
+        cmp bl, '0'
+        jb %%invalid_char
+        cmp bl, '9'
+        ja %%invalid_char
+        
+        sub bl, '0'
+        imul eax, 10       
+        jo %%overflow_error 
+        add eax, ebx       
+        jo %%overflow_error 
+        
+        inc esi
+        inc edx            
+        jmp %%convert_loop
+
+    %%negative:
+        cmp esi, buffer    
+        jne %%invalid_char
+        mov ecx, 1         
+        inc esi
+        jmp %%convert_loop
+
+    %%check_length:
+        cmp edx, 0         
+        je %%no_digits
+        cmp ecx, 1         
+        jne %%store_number
+        neg eax            ; Если был знак минус, делаем число отрицательным
+
+    %%store_number:
+        mov [%1], eax
+        jmp %%end
+
+    %%invalid_char:
+        write_string msErrInvalid, len_msErrInvalid
+        jmp exit_error
+
+    %%overflow_error:
+        write_string msErrOverflow, len_msErrOverflow
+        jmp exit_error
+
+    %%no_digits:
+        write_string msErrInvalid, len_msErrInvalid
+        jmp exit_error
+
+    %%end:
+%endmacro
+
+%macro output_number 1
+    pusha
+    mov eax, [%1]
+    mov ecx, 0         
+    mov ebx, 10        
+    
+    test eax, eax
+    jns %%positive
+    neg eax            
+    
+    
+    push eax
+    write_string minus, 1
+    pop eax
+    
+    %%positive:
+    
+    %%divide_loop:
+        xor edx, edx
+        div ebx            
+        add dl, '0'        
+        push edx           
+        inc ecx            
+        test eax, eax      
+        jnz %%divide_loop   
+
+    cmp ecx, 0
+    jne %%print_loop
+    push '0'
+    inc ecx
+
+    %%print_loop:
+        pop eax            
+        mov [temp], al     
+        
+        push ecx
+        write_string temp, 1
+        pop ecx
+        
+        loop %%print_loop   
+    
+    popa
+%endmacro
+
+%macro newline 0
+    write_string ent, 1
+%endmacro
+
+section .data
+    msI db "Input array size N: "
+    len_msI equ $-msI
+    msArr db "Input array element ["
+    len_msArr equ $-msArr
+    msArr2 db "]: "
+    len_msArr2 equ $-msArr2
+
+    msResult     db "Longest sequence of same sign: ", 0xA
+    len_msResult equ $-msResult
+    msEl db "ELements: "
+    len_msEl equ $-msEl
+    msLen     db "Length: "
+    len_msLen equ $-msLen
+
+    msErr db "Error: Array cannot contain zeros!!!", 0xA
+    len_msErr equ $-msErr
+
+    ent db 0xA
+    space db ' '
+    minus db '-'
+    comma db ', '
+    len_comma equ 2
+
+    msErrInvalid   db "Error: Invalid character in number!", 0xA
+    len_msErrInvalid equ $-msErrInvalid
+    msErrOverflow  db "Error: Number too large!", 0xA
+    len_msErrOverflow equ $-msErrOverflow
+
+section .bss
+    N resd 1
+    array resd 100
+    buffer resb 20
+    temp resb 1
+    temp_num resd 1
+    best_start resd 1
+    best_length resd 1
+    curr_start resd 1
+    curr_length resd 1
+    curr_sign resd 1
+
+section .text
+    global _start
+
+get_sign:
+    cmp eax, 0
+    jg positive
+    jl negative
+    mov eax, 0
+    ret
+positive:
+    mov eax, 1
+    ret
+negative:
+    mov eax, -1
+    ret
+
+find_longest_seq:
+    push ebx
+    push ecx
+    push edx
+    push esi
+
+    mov ecx, [N]
+    cmp ecx, 0
+    je done
+
+    mov esi, array
+
+    mov eax, [esi]
+    call get_sign
+    mov [curr_sign], eax
+
+    mov dword [curr_start], 0
+    mov dword [curr_length], 1
+    mov dword [best_start], 0
+    mov dword [best_length], 1
+
+    mov eax, [esi]
+    cmp eax, 0
+    je zero_error
+
+    mov ebx, 1     ;current index
+
+loop_arr: 
+    cmp ebx, ecx
+    jge check_last
+
+    mov eax, [esi + ebx * 4]   ;get current elem
+
+    cmp eax, 0
+    je zero_error
+
+    call get_sign
+
+    mov edx, [curr_sign]
+    cmp eax, edx
+    je same_sign
+
+    mov edx, [curr_length]
+    cmp edx, [best_length]
+    jle start_new
+
+    mov edx, [curr_start]
+    mov [best_start], edx
+    mov edx, [curr_length]
+    mov [best_length], edx
+
+start_new:
+    mov [curr_sign], eax
+    mov [curr_start], ebx
+    mov dword [curr_length], 1
+    jmp next
+
+same_sign:
+    inc dword [curr_length]
+
+next: 
+    inc ebx
+    jmp loop_arr
+
+check_last:
+    mov edx, [curr_length]
+    cmp edx, [best_length]
+    jle done
+
+    mov edx, [curr_start]
+    mov [best_start], edx
+    mov edx, [curr_length]
+    mov [best_length], edx
+    jmp done
+
+zero_error: 
+    write_string msErr, len_msErr
+    mov eax, SYS_EXIT
+    mov ebx, 1
+    int 0x80
+
+done:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+
+output_sequence:
+    pusha
+
+    write_string msEl, len_msEl
+
+    mov ecx, [best_length]
+    mov ebx, [best_start]
+    mov esi, array
+
+output_loop:
+    mov eax, [esi + ebx * 4]
+    push ecx
+    push ebx
+    mov [temp_num], eax
+    output_number temp_num
+    pop ebx
+    pop ecx
+    
+    dec ecx
+    jz done_output
+
+    push ecx
+    push ebx
+    write_string comma, len_comma
+    pop ebx
+    pop ecx
+
+    inc ebx
+    jmp output_loop
+
+done_output:
+    newline
+    popa 
+    ret
+
+_start:
+    write_string msI, len_msI
+    input_number N
+
+    mov eax, [N]
+    cmp eax, 0
+    jle exit_success
+    cmp eax, 100
+    jg size_error
+
+    mov ecx, [N]
+    mov ebx, 0
+
+input_loop:
+    write_string msArr, len_msArr
+
+    mov eax, ebx
+    inc eax
+
+    mov [temp_num], eax
+    output_number temp_num
+    write_string msArr2, len_msArr2
+
+    push ecx
+    push ebx
+    input_number temp_num
+
+    mov eax, [temp_num]
+    cmp eax, 0
+    je zero_error_input
+
+    pop ebx
+    mov eax, [temp_num]
+    mov [array + ebx * 4], eax
+
+    pop ecx
+    inc ebx
+    dec ecx
+    jnz input_loop
+    
+    call find_longest_seq
+    
+    write_string msResult, len_msResult
+    
+    write_string msLen, len_msLen
+    output_number best_length
+    newline
+    
+    call output_sequence
+    
+    jmp exit_success
+
+size_error:
+    write_string msErrInvalid, len_msErrInvalid
+    jmp exit_error
+
+zero_error_input:
+    pop ecx
+    pop ebx
+    write_string msErr, len_msErr
+    jmp exit_error
+
+exit_success:
+    mov eax, SYS_EXIT
+    mov ebx, 0
+    int 0x80
+
+exit_error:
+    mov eax, SYS_EXIT
+    mov ebx, 1
+    int 0x80
+

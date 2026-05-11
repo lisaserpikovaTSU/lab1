@@ -7,11 +7,14 @@ CONFIG += c++17 cmdline
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        aescrypttool.cpp \
         main.cpp \
         cryptfiledevice.cpp
 
 HEADERS += \
-        cryptfiledevice.h
+        cryptfiledevice.h \
+        aescrypttool.h \
+        icrypttool.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

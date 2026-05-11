@@ -1,0 +1,440 @@
+SYS_EXIT  equ 1
+SYS_READ  equ 3
+SYS_WRITE equ 4
+STDIN     equ 0
+STDOUT    equ 1
+
+%macro write_string 2
+    mov eax, SYS_WRITE
+    mov ebx, STDOUT
+    mov ecx, %1
+    mov edx, %2
+    int 0x80
+%endmacro
+
+%macro read_string 2
+    mov eax, SYS_READ
+    mov ebx, STDIN
+    mov ecx, %1
+    mov edx, %2
+    int 0x80
+%endmacro
+
+%macro input_number 1
+    read_string buffer, 20
+
+    mov esi, buffer
+    xor eax, eax       
+    xor ebx, ebx       
+    xor ecx, ecx       
+    xor edx, edx
+
+    %%convert_loop:
+        mov bl, [esi]
+        cmp bl, 0xA
+        je %%check_length
+        cmp bl, '-'
+        je %%negative
+        cmp bl, '0'
+        jb %%invalid_char
+        cmp bl, '9'
+        ja %%invalid_char
+
+        sub bl, '0'
+        imul eax, 10
+        jo %%overflow_error
+        add eax, ebx
+        jo %%overflow_error
+
+        inc esi
+        inc edx
+        jmp %%convert_loop
+
+    %%negative:
+        cmp esi, buffer
+        jne %%invalid_char
+        mov ecx, 1
+        inc esi
+        jmp %%convert_loop
+    
+    %%check_length:
+        cmp edx, 0
+        je %%no_digits
+        cmp ecx, 1
+        jne %%store_number
+        neg eax
+
+    %%store_number:
+        mov [%1], eax
+        jmp %%end
+
+    %%invalid_char:
+        write_string msErrInvalid, len_msErrInvalid
+        jmp exit_error
+
+    %%overflow_error:
+        write_string msErrOverflow, len_msErrOverflow
+        jmp exit_error
+
+    %%no_digits:
+        write_string msErrInvalid, len_msErrInvalid
+        jmp exit_error
+
+    %%end:
+
+%endmacro
+
+%macro output_number 1
+    pusha
+    mov eax, [%1]
+
+    test eax, eax
+    jns %%positive
+    neg eax
+
+    push eax
+    write_string minus, 1
+    pop eax
+
+    %%positive:
+        mov ecx, 0         
+        mov ebx, 10
+    
+    %%divide_loop:
+        xor edx, edx
+        div ebx            
+        add dl, '0'        
+        push edx           
+        inc ecx            
+        test eax, eax      
+        jnz %%divide_loop 
+
+    %%print_loop:
+        pop eax            
+        mov [temp_char], al     
+        
+        push ecx
+        write_string temp_char, 1
+        pop ecx
+
+        dec ecx 
+        test ecx, ecx
+        jnz %%print_loop   
+    
+    popa
+%endmacro
+
+%macro newline 0
+    write_string ent, 1
+%endmacro
+
+%macro read_matrix 3    ;matrix, n, m
+    pusha
+    mov dword [i], 0 ;rows counter
+
+%%.input_rows:
+    mov eax, [i]
+    cmp eax, [%2]
+    jge %%.input_done
+    
+    mov dword [j], 0 ;cols counter
+
+%%.input_cols:
+    mov eax, [j]
+    cmp eax, [%3]
+    jge %%.next_input_row
+
+    write_string msElem, len_msElem
+    mov eax, [i]
+    inc eax
+    mov [temp_num], eax
+    output_number temp_num
+
+    write_string msElem2, len_msElem2
+    
+    mov eax, [j]
+    inc eax
+    mov [temp_num], eax
+    output_number temp_num
+
+    write_string msElem3, len_msElem3
+
+    input_number temp_num
+
+    mov eax, [i]
+    mov ebx, [j]
+    call get_matrix_index
+
+    mov ecx, eax 
+    mov eax, [temp_num]
+    mov [%1 + ecx * 4], eax
+
+    inc dword [j]
+    jmp %%.input_cols
+
+%%.next_input_row:
+    inc dword [i]
+    jmp %%.input_rows
+
+%%.input_done:
+    popa
+%endmacro
+
+section .data
+    msRows1 db "Enter number of rows(n) of first matrix: "
+    len_msRows1 equ $-msRows1
+    msCols1 db  "Enter number of columns(m) of first matrix: "
+    len_msCols1 equ $-msCols1
+    msRows2 db "Number of rows in second matrix should be equal to m!", 0xA
+    len_msRows2 equ $-msRows2
+    msCols2 db  "Enter number of columns(k) of second matrix: "
+    len_msCols2 equ $-msCols2
+    msElem       db "Element ["
+    len_msElem   equ $-msElem
+    msElem2      db "]["
+    len_msElem2  equ $-msElem2
+    msElem3      db "]: "
+    len_msElem3  equ $-msElem3
+
+
+    msRes db "Result of multiplication: ", 0xA
+    len_msRes equ $-msRes
+
+    msErrInvalid db "Error: Invalid character in number!", 0xA
+    len_msErrInvalid equ $-msErrInvalid
+    msErrOverflow db "Error: Number too large!", 0xA
+    len_msErrOverflow equ $-msErrOverflow
+    msErrSize db "Error: Matrix too large! Max 1000 elements.", 0xA
+    len_msErrSize equ $-msErrSize
+    msErrSizeZero db "Error: Rows and columns must be positive!", 0xA
+    len_msErrSizeZero equ $-msErrSizeZero
+
+    ent db 0xA
+    space db ' '
+    minus db '-'
+    left_bracket db "["
+    right_bracket db "]"
+
+section .bss
+    n resd 1 ;rows first matrix
+    m resd 1 ;cols first & rows second
+    k resd 1 ;cols second
+    matrixA resd 1000
+    matrixB resd 1000
+    matrixRes resd 1000
+    buffer resb 20
+    temp_char resb 1
+    temp_num resd 1
+    temp_ctr resd 1
+    i resd 1 ;counter  of rows
+    j resd 1 ;counter of cols
+
+section .text
+    global _start
+
+;to count index of number in matrix
+get_matrix_index:
+    ;i in eax
+    ;j in ebx
+    push ecx
+    push edx
+
+    mov ecx, [m]
+    imul eax, ecx ;eax = i * m
+    add eax, ebx ;eax = i * m + j
+
+    ;res in eax
+    pop edx
+    pop ecx
+    ret
+
+;for res matrix output
+print_matrix:
+    pusha
+
+    write_string msRes, len_msRes
+
+    mov dword [i], 0  ;rows counter  
+
+.row_loop:
+    mov eax, [i]
+    cmp eax, [n]
+    jge .done_print
+
+    inc eax
+
+    mov dword [j], 0 ;cols counter
+
+.col_loop:
+    mov eax, [j]
+    cmp eax, [k]
+    jge .next_row
+
+    ;count index
+    mov eax, [i]
+    mov ebx, [j]
+    call get_matrix_index
+
+    ;output of elemet
+    mov ebx, eax
+    mov eax, [matrixRes + ebx*4]
+    mov [temp_num], eax
+    output_number temp_num
+
+    ;check for last elem
+    mov eax, [j]
+    inc eax
+    cmp eax, [k]
+    jge .no_space
+
+    ;for between elems
+    write_string space, 1
+
+.no_space:
+    inc dword [j]
+    jmp .col_loop
+
+.next_row:
+    newline
+    inc dword [i]
+    jmp .row_loop
+
+.done_print:
+    popa
+    ret
+
+
+_start:
+    write_string msRows1, len_msRows1
+    input_number n
+
+    ;check number for rows
+    mov eax, [n]
+    cmp eax, 0
+    jle .size_zero_error
+    cmp eax, 100
+    jg .size_error
+
+    write_string msCols1, len_msCols1
+    input_number m
+
+    mov eax, [m]
+    cmp eax, 0
+    jle .size_zero_error
+
+    mov eax, [n]
+    mov ebx, [m]
+    imul eax, ebx        ; eax = n * m
+    cmp eax, 1000
+    jg .size_error
+
+    ;input of elements
+    read_matrix matrixA, n, m
+
+    ;second matrix
+    write_string msRows2, len_msRows2
+
+    write_string msCols2, len_msCols2
+    input_number k
+
+    mov eax, [k]
+    cmp eax, 0
+    jle .size_zero_error
+
+    mov eax, [m]
+    mov ebx, [k]
+    imul eax, ebx        ; eax = m * k
+    cmp eax, 1000
+    jg .size_error
+
+    ;input of elements
+    read_matrix matrixB, m, k
+
+    ;multiply A and B
+    mov eax, [n]
+    mov ebx, [k]
+    imul eax, ebx
+    cmp eax, 1000
+    jg .size_error
+
+    ;C[i][j] = sum(A[i][p] * B[p][j]), p = [1, m]
+    mov dword [i], 0  ;for rows of res
+.mult_i_loop:
+    mov eax, [i]
+    cmp eax, [n]
+    jge .mult_done
+
+    mov dword [j], 0   ;for cols of res
+.mult_j_loop:
+    mov eax, [j]
+    cmp eax, [k]
+    jge .mult_next_i
+
+    ;calculate res[i][j]
+    mov dword [temp_num], 0  ;for sum
+    mov dword [temp_ctr], 0  ;for p counter
+
+.mult_p_loop:
+    mov eax, [temp_ctr]
+    cmp eax, [m]
+    jge .mult_p_done
+
+    ;get A[i][p]
+    mov eax, [i]
+    mov ebx, [temp_ctr]
+    call get_matrix_index
+    mov edx, [matrixA + eax*4]
+
+    ;get B[p][j]
+    mov eax, [temp_ctr]
+    mov ebx, [j]
+    mov ecx, [k]
+
+    imul eax, ecx
+    add eax, ebx
+    mov ecx, [matrixB + eax*4]
+
+    ;accumulate res
+    imul edx, ecx
+    add [temp_num], edx
+
+    inc dword [temp_ctr]
+    jmp .mult_p_loop
+
+.mult_p_done:
+    ; store res in Res[i][j]
+    mov eax, [i]
+    mov ebx, [j]
+    call get_matrix_index
+    mov edx, [temp_num]
+    mov [matrixRes + eax*4], edx
+    
+    inc dword [j]
+    jmp .mult_j_loop
+
+.mult_next_i:
+    inc dword [i]
+    jmp .mult_i_loop
+
+.mult_done:
+    call print_matrix
+
+    jmp exit_success
+
+.size_error:
+    write_string msErrSize, len_msErrSize
+    jmp exit_error
+
+.size_zero_error:
+    write_string msErrSizeZero, len_msErrSizeZero
+    jmp exit_error
+
+exit_success:
+    mov eax, SYS_EXIT
+    mov ebx, 0
+    int 0x80
+
+exit_error:
+    mov eax, SYS_EXIT
+    mov ebx, 1
+    int 0x80
