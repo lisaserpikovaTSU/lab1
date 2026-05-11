@@ -29,6 +29,8 @@ private:
     bool isFileEncrypted(const QString& path);
     bool isFolderSystem(const QString& path);
 
+    bool isProgramFile(const QString& path);
+
     void encryptFile(const QString& path, const QString& password);
     void decryptFile(const QString& path, const QString& password);
 };

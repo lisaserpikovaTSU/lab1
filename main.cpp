@@ -16,8 +16,10 @@
 QTextStream cin(stdin);
 QTextStream cout(stdout);
 
-int main()
+int main(int argc, char *argv[])
 {
+    QCoreApplication app(argc, argv);
+
     QString path;
     cout << "Enter path for folder: ";
     cout.flush();
