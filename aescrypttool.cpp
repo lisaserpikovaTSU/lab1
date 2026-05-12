@@ -200,10 +200,10 @@ bool AesCryptTool::isShortcut(const QString &path){
     }
 
     if (file.suffix().toLower() == "lnk"
-        || fileInfo.suffix().toLower() == "url"
-        || fileInfo.suffix().toLower() == "alias"
-        || fileInfo.fileName().endsWith(".alias")
-        || fileInfo.suffix().toLower() == "desktop")
+        || file.suffix().toLower() == "url"
+        || file.suffix().toLower() == "alias"
+        || file.fileName().endsWith(".alias")
+        || file.suffix().toLower() == "desktop")
     {
         return true;
     }
