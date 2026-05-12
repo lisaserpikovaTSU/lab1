@@ -1,3 +1,4 @@
+#include <QCoreApplication>
 #include "aescrypttool.h"
 #include <QDir>
 #include <QDirIterator>
@@ -18,6 +19,11 @@ void AesCryptTool::encryptFolder(const QString& path, const QString& password)
 
     if (!dir.exists()) {
         qDebug() << "Directory does not exist.";
+        return;
+    }
+
+    if (isFolderSystem(path)) {
+        qDebug() << "System folder cannot be encrypted.";
         return;
     }
 
@@ -47,6 +53,11 @@ void AesCryptTool::decryptFolder(const QString& path, const QString& password)
 
     if (!dir.exists()) {
         qDebug() << "Directory does not exist.";
+        return;
+    }
+
+    if (isFolderSystem(path)) {
+        qDebug() << "System folder cannot be decrypted.";
         return;
     }
 
@@ -88,16 +99,129 @@ bool AesCryptTool::isFileEncrypted(const QString& path){
     return (marker == MARK);
 }
 
-bool AesCryptTool::isFolderSystem(const QString& path){
+bool AesCryptTool::isFolderSystem(const QString& path) {
     QString lowerPath = path.toLower();
+    QFileInfo pathInfo(path);
+    QString canonicalPath = pathInfo.canonicalFilePath().toLower();
 
-    if (lowerPath.startsWith("c:") || lowerPath.startsWith("c:/") || lowerPath.startsWith("c:\\") || lowerPath.startsWith("/system")) {
+    // Windows
+    if (canonicalPath.startsWith("c:/windows") ||
+        canonicalPath.startsWith("c:\\windows") ||
+        canonicalPath.startsWith("c:/program files") ||
+        canonicalPath.startsWith("c:\\program files") ||
+        canonicalPath.startsWith("c:/program files (x86)") ||
+        canonicalPath.startsWith("c:\\program files (x86)") ||
+        canonicalPath.startsWith("c:/programdata") ||
+        canonicalPath.startsWith("c:\\programdata")) {
         return true;
     }
+
+    // macOS
+    if (canonicalPath.startsWith("/system") ||
+        canonicalPath.startsWith("/library") ||
+        canonicalPath.startsWith("/usr") ||
+        canonicalPath.startsWith("/bin") ||
+        canonicalPath.startsWith("/sbin") ||
+        canonicalPath.startsWith("/private") ||
+        canonicalPath.startsWith("/var") ||
+        canonicalPath.startsWith("/tmp")) {
+        return true;
+    }
+
+    // Linux/Unix
+    if (canonicalPath == "/" ||
+        canonicalPath.startsWith("/boot") ||
+        canonicalPath.startsWith("/dev") ||
+        canonicalPath.startsWith("/proc") ||
+        canonicalPath.startsWith("/sys") ||
+        canonicalPath.startsWith("/etc") ||
+        canonicalPath.startsWith("/root") ||
+        canonicalPath.startsWith("/lost+found")) {
+        return true;
+    }
+
+    return false;
+}
+
+bool AesCryptTool::isProgramFile(const QString& path) {
+    QFileInfo file(path);
+    QString suffix = file.suffix().toLower();
+    QString fileName = file.fileName().toLower();
+
+    QStringList executableExtensions = {
+        "exe", "dll", "so", "dylib", "app", "msi", "deb", "rpm",
+        "jar", "py", "pyc", "pyo", "class", "bin", "sh", "bash",
+        "zsh", "fish", "csh", "tcsh", "ksh", "rb", "pl", "php",
+        "js", "ts", "go", "rs", "cpp", "c", "h", "hpp", "swift"
+    };
+
+    QStringList configFiles = {
+        "makefile", "cmakelists.txt", "configure", "setup.py",
+        "package.json", "cargo.toml", "pom.xml", "build.gradle",
+        "dockerfile", "docker-compose.yml", "vagrantfile",
+        "rakefile", "gruntfile.js", "gulpfile.js", "webpack.config.js"
+    };
+
+    if (executableExtensions.contains(suffix)) {
+        QString canonicalPath = file.canonicalFilePath();
+        if (canonicalPath.startsWith("/bin/") ||
+            canonicalPath.startsWith("/usr/bin/") ||
+            canonicalPath.startsWith("/usr/local/bin/") ||
+            canonicalPath.startsWith("/opt/")) {
+            return true;
+        }
+        return true;
+    }
+
+    if (configFiles.contains(fileName)) {
+        return true;
+    }
+
+    QString executablePath = QCoreApplication::applicationFilePath();
+    QFileInfo exeInfo(executablePath);
+    QString exeDir = exeInfo.canonicalPath();
+
+    QFileInfo currentFileInfo(path);
+    QString currentCanonicalPath = currentFileInfo.canonicalFilePath();
+
+    if (currentCanonicalPath.startsWith(exeDir)) {
+        return true;
+    }
+
+    return false;
+}
+
+bool AesCryptTool::isShortcut(const QString &path){
+
+    QFileInfo file(path);
+
+    if (file.isSymLink()) {
+        return true;
+    }
+
+    if (file.suffix().toLower() == "lnk"
+        || file.suffix().toLower() == "url"
+        || file.suffix().toLower() == "alias"
+        || file.fileName().endsWith(".alias")
+        || file.suffix().toLower() == "desktop")
+    {
+        return true;
+    }
+
     return false;
 }
 
 void AesCryptTool::encryptFile(const QString& path, const QString& password){
+    if (isProgramFile(path)) {
+        qDebug() << "System file cannot be encrypted. Skipping " << path;
+        return;
+    }
+
+    if (isShortcut(path)) {
+        qDebug() << "Shortcut or symlink cannot be encrypted. Skipping " << path;
+        return;
+    }
+
     if (isFileEncrypted(path)) {
         qDebug() << "Already encrypted. Skipping " << path;
         return;
@@ -166,6 +290,16 @@ void AesCryptTool::encryptFile(const QString& path, const QString& password){
 
 
 void AesCryptTool::decryptFile(const QString& path, const QString& password){
+    if (isProgramFile(path)) {
+        qDebug() << "System file cannot be decrypted. Skipping " << path;
+        return;
+    }
+
+    if (isShortcut(path)) {
+        qDebug() << "Shortcut or symlink cannot be decrypted. Skipping " << path;
+        return;
+    }
+
     if (!isFileEncrypted(path)) {
         qDebug() << "Is not encrypted. Skipping" << path;
         return;

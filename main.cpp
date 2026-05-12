@@ -16,8 +16,19 @@
 QTextStream cin(stdin);
 QTextStream cout(stdout);
 
-int main()
+//Случай 13: Папка по переданному пути содержит ярлыки
+//   Путь для проверки: /Users/liza/lab1/tests/shortcut
+
+//Случай 14: Папка по переданному пути является системной
+//   Путь для проверки: /usr/local/bin
+
+//Случай 15: Переданный путь является путем программы
+//   Путь для проверки: /Users/liza/lab1/
+
+int main(int argc, char *argv[])
 {
+    QCoreApplication app(argc, argv);
+
     QString path;
     cout << "Enter path for folder: ";
     cout.flush();
@@ -46,7 +57,7 @@ int main()
         cout << "Encrypting folder: " << path << Qt::endl;
         tool.encryptFolder(path, password);
     } else {
-        cout << "Decrypting folder: " << "/Users/liza/Desktop/Тестовая2/" << Qt::endl;
+        cout << "Decrypting folder: " << path << Qt::endl;
         tool.decryptFolder(path, password);
     }
 
