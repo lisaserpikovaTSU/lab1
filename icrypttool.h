@@ -3,6 +3,7 @@
 
 #include <QString>
 
+//Класс-интерфейс для инструментов шифрования/дешифрования
 class ICryptTool {
 public:
     virtual ~ICryptTool() = default;
