@@ -191,9 +191,34 @@ bool AesCryptTool::isProgramFile(const QString& path) {
     return false;
 }
 
+bool AesCryptTool::isShortcut(const QString &path){
+
+    QFileInfo file(path);
+
+    if (file.isSymLink()) {
+        return true;
+    }
+
+    if (file.suffix().toLower() == "lnk"
+        || fileInfo.suffix().toLower() == "url"
+        || fileInfo.suffix().toLower() == "alias"
+        || fileInfo.fileName().endsWith(".alias")
+        || fileInfo.suffix().toLower() == "desktop")
+    {
+        return true;
+    }
+
+    return false;
+}
+
 void AesCryptTool::encryptFile(const QString& path, const QString& password){
     if (isProgramFile(path)) {
         qDebug() << "System file cannot be encrypted. Skipping " << path;
+        return;
+    }
+
+    if (isShortcut(path)) {
+        qDebug() << "Shortcut or symlink cannot be encrypted. Skipping " << path;
         return;
     }
 
@@ -267,6 +292,11 @@ void AesCryptTool::encryptFile(const QString& path, const QString& password){
 void AesCryptTool::decryptFile(const QString& path, const QString& password){
     if (isProgramFile(path)) {
         qDebug() << "System file cannot be decrypted. Skipping " << path;
+        return;
+    }
+
+    if (isShortcut(path)) {
+        qDebug() << "Shortcut or symlink cannot be decrypted. Skipping " << path;
         return;
     }
 
