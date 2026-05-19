@@ -8,10 +8,12 @@
 #include <QRandomGenerator>
 #include "cryptfiledevice.h"
 
+//Реализация функции шифрования
 void AesCryptTool::encryptFolder(const QString& path, const QString& password)
 {
     QDir dir(path);
 
+    //Проверяем на исключительные ситуации
     if (dir.isEmpty()) {
         qDebug() << "Directory cannot be empty!";
         return;
@@ -32,6 +34,7 @@ void AesCryptTool::encryptFolder(const QString& path, const QString& password)
         return;
     }
 
+    //Рекурсивный обход поддиректорий с шифрованием встреченных файлов
     QDirIterator it(path, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         it.next();
@@ -42,10 +45,12 @@ void AesCryptTool::encryptFolder(const QString& path, const QString& password)
     }
 }
 
+//Реализация функции дешифрования
 void AesCryptTool::decryptFolder(const QString& path, const QString& password)
 {
     QDir dir(path);
 
+    //Проверяем на исключительные ситуации
     if (dir.isEmpty()) {
         qDebug() << "Directory cannot be empty!";
         return;
@@ -61,6 +66,7 @@ void AesCryptTool::decryptFolder(const QString& path, const QString& password)
         return;
     }
 
+    //Рекурсивный обход поддиректорий с дешифрованием встреченных файлов
     QDirIterator it(path, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         it.next();
@@ -71,6 +77,7 @@ void AesCryptTool::decryptFolder(const QString& path, const QString& password)
     }
 }
 
+//Генерация случайной соли заданного размера
 QByteArray AesCryptTool::generateSalt(int size) {
     QByteArray data;
     while (data.size() < size) {
@@ -79,28 +86,36 @@ QByteArray AesCryptTool::generateSalt(int size) {
     return data;
 }
 
+//Метка, позволяющая распознавать зашифрованные файлы
 const QByteArray MARK = "ENCRYPTED";
+//Размер соли в байтах
 const int SALT_SIZE = 16;
 
+//Реализация функции проверки зашифрованности файла
 bool AesCryptTool::isFileEncrypted(const QString& path){
+    //Создаем и открываем файл
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         return false;
     }
 
+    //Если размер файла меньше размера метки, то файл не может быть зашифрованным
     if (file.size() < MARK.size()) {
         file.close();
         return false;
     }
 
+    //Считываем size первых байт из файла
     QByteArray marker = file.read(MARK.size());
     file.close();
 
+    //Если совпадают - файл является зашифрованным
     return (marker == MARK);
 }
 
+//Реализация функции проверки папки на принадлежность к системным
 bool AesCryptTool::isFolderSystem(const QString& path) {
-    QString lowerPath = path.toLower();
+    //Приводим к нижнему регистру абсолютный путь
     QFileInfo pathInfo(path);
     QString canonicalPath = pathInfo.canonicalFilePath().toLower();
 
@@ -143,11 +158,13 @@ bool AesCryptTool::isFolderSystem(const QString& path) {
     return false;
 }
 
+//Реализация функции проверки файла на принадлежность к системным
 bool AesCryptTool::isProgramFile(const QString& path) {
     QFileInfo file(path);
     QString suffix = file.suffix().toLower();
     QString fileName = file.fileName().toLower();
 
+    //Список расширений файлов
     QStringList executableExtensions = {
         "exe", "dll", "so", "dylib", "app", "msi", "deb", "rpm",
         "jar", "py", "pyc", "pyo", "class", "bin", "sh", "bash",
@@ -155,6 +172,7 @@ bool AesCryptTool::isProgramFile(const QString& path) {
         "js", "ts", "go", "rs", "cpp", "c", "h", "hpp", "swift"
     };
 
+    //Список файлов конфигурации
     QStringList configFiles = {
         "makefile", "cmakelists.txt", "configure", "setup.py",
         "package.json", "cargo.toml", "pom.xml", "build.gradle",
@@ -162,6 +180,7 @@ bool AesCryptTool::isProgramFile(const QString& path) {
         "rakefile", "gruntfile.js", "gulpfile.js", "webpack.config.js"
     };
 
+    //Проверяем расширение
     if (executableExtensions.contains(suffix)) {
         QString canonicalPath = file.canonicalFilePath();
         if (canonicalPath.startsWith("/bin/") ||
@@ -173,10 +192,12 @@ bool AesCryptTool::isProgramFile(const QString& path) {
         return true;
     }
 
+    //Проверяем относится ли файл к конфигурационным
     if (configFiles.contains(fileName)) {
         return true;
     }
 
+    //Защита файлов самой программы от шифрования
     QString executablePath = QCoreApplication::applicationFilePath();
     QFileInfo exeInfo(executablePath);
     QString exeDir = exeInfo.canonicalPath();
@@ -191,6 +212,7 @@ bool AesCryptTool::isProgramFile(const QString& path) {
     return false;
 }
 
+//Релизация функции проверки файла на ярлык или ссылку
 bool AesCryptTool::isShortcut(const QString &path){
 
     QFileInfo file(path);
@@ -211,7 +233,10 @@ bool AesCryptTool::isShortcut(const QString &path){
     return false;
 }
 
+//Релизация функции шифрования файла
 void AesCryptTool::encryptFile(const QString& path, const QString& password){
+
+    //Предварительные проверки
     if (isProgramFile(path)) {
         qDebug() << "System file cannot be encrypted. Skipping " << path;
         return;
@@ -227,25 +252,30 @@ void AesCryptTool::encryptFile(const QString& path, const QString& password){
         return;
     }
 
+    //Открываем исходный файл для чтения
     QFile toEncrypt(path);
     if (!toEncrypt.open(QIODevice::ReadOnly)) {
         qDebug() << "Error opening file to encrypt " << path;
         return;
     }
 
+    //Если файл пустой, нет смысла его шифровать
     if(toEncrypt.size() == 0) {
         qDebug() << "File is empty. Skipping" << path;
         toEncrypt.close();
         return;
     }
 
+    //Создаем временный файл
     QTemporaryFile tempFile;
     tempFile.open();
     QString tempPath = tempFile.fileName();
     tempFile.close();
 
+    //Генерируем соль
     QByteArray salt = generateSalt(SALT_SIZE);
 
+    //Создаем экземпляр девайса для шифрования
     QFile tempFileDevice(tempPath);
     CryptFileDevice cryptFileDevice(&tempFileDevice, password.toUtf8(), salt);
 
@@ -255,6 +285,7 @@ void AesCryptTool::encryptFile(const QString& path, const QString& password){
         return;
     }
 
+    //Читаем исходный файл блоками и шифруем
     const qint64 BUFFER_SIZE = 8192;
     QByteArray buffer;
 
@@ -276,20 +307,25 @@ void AesCryptTool::encryptFile(const QString& path, const QString& password){
     QByteArray encryptedData = tempFileDevice.readAll();
     tempFileDevice.close();
 
+    //Добавляем метку и соль в начало зашифрованного файла
     tempFileDevice.open(QIODevice::WriteOnly);
     tempFileDevice.write(MARK);
     tempFileDevice.write(salt);
+    //Добавляем зашифрованные данные
     tempFileDevice.write(encryptedData);
     tempFileDevice.close();
 
+    //Заменяем исходный файл зашифрованным
     QFile::remove(path);
     QFile::copy(tempPath, path);
 
     qDebug() << "Successfully encrypted:" << path;
 }
 
-
+//Релизация функции дешифрования файла
 void AesCryptTool::decryptFile(const QString& path, const QString& password){
+
+    //Предварительные проверки
     if (isProgramFile(path)) {
         qDebug() << "System file cannot be decrypted. Skipping " << path;
         return;
@@ -305,29 +341,35 @@ void AesCryptTool::decryptFile(const QString& path, const QString& password){
         return;
     }
 
+    //Открываем исходный файл для чтения
     QFile toDecrypt(path);
     if (!toDecrypt.open(QIODevice::ReadOnly)) {
         qDebug() << "Error opening file to decrypt " << path;
         return;
     }
 
+    //Считываем метку и соль
     QByteArray marker = toDecrypt.read(MARK.size());
     QByteArray salt = toDecrypt.read(SALT_SIZE);
 
+    //Считыаем зашифрованные данные
     QByteArray encryptedData = toDecrypt.readAll();
     toDecrypt.close();
 
+    //Записываем зашифрованные данные в отдельный файл
     QTemporaryFile tempFile;
     tempFile.open();
     tempFile.write(encryptedData);
     tempFile.close();
 
+    //Создаем экземпляр девайса для дешифрования
     CryptFileDevice cryptFileDevice(&tempFile, password.toUtf8(), salt);
     if (!cryptFileDevice.open(QIODevice::ReadOnly)) {
         qDebug() << "Password is incorrect. Decryption is not available!";
         return;
     }
 
+    //Считываем расшифрованные данные блоками
     const qint64 BUFFER_SIZE = 8192;
     QByteArray decryptedData;
     QByteArray buffer;
@@ -344,11 +386,13 @@ void AesCryptTool::decryptFile(const QString& path, const QString& password){
         return;
     }
 
+    //Записываем результат во временный файл
     QTemporaryFile tempDecryptedFile;
     tempDecryptedFile.open();
     tempDecryptedFile.write(decryptedData);
     tempDecryptedFile.close();
 
+    //Заменяем исходный файл расшифрованным
     QFile::remove(path);
     QFile::copy(tempDecryptedFile.fileName(), path);
 
