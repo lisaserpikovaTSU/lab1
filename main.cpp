@@ -7,7 +7,6 @@
 #include <openssl/aes.h>
 #include <openssl/rand.h>
 #include <stdexcept>
-#include "cryptfiledevice.h"
 #include <QRandomGenerator>
 #include <QDebug>
 #include <QTemporaryFile>
@@ -16,9 +15,58 @@
 QTextStream cin(stdin);
 QTextStream cout(stdout);
 
+
+//Тестирование функции ШИФРОВАНИЯ папки (encryptFolder)
+
+//Входные данные - путь до папки, пароль
+
+//Случай 1: Папки по пути не существует
+//   Путь для проверки: ../tests/nonexistingfolder
+
+//Случай 2: Папка по переданному пути существует и пуста
+//   Путь для проверки: ../tests/emptyfolder
+
+//Случай 3: Папка по переданному пути существует, содержит
+//          подпапки и файлы
+//   Путь для проверки: ../tests/subdirsandfiles
+
+//Случай 4: Папка содержит файлы разных типов
+//   Путь для проверки: ../tests/differentfiles
+
+//Случай 5: Папка содержит пустые файлы
+//   Путь для проверки: ../tests/emptyfiles
+
+//Случай 6: Папка является системной
+//   Путь для проверки: /System/Library/Siri/DM/SiriSuggestions/Owners
+
+//Случай 7: Папка содержит уже зашифрованные файлы
+//   Путь для проверки: ../tests/encrypted
+
+//Случай 8: Пустой пароль
+//   Путь для проверки: ../tests/subdirsandfiles
+//   Пароль: ""
+
+//Тестирование функции ДЕШИФРОВАНИЯ папки (decryptFolder)
+
+//Входные данные - путь до папки, пароль
+
+//Случай 9: Папка содержит зашифрованные файлы, введен верный пароль
+//   Путь для проверки: ../tests/encrypted
+
+//Случай 10: Папка содержит незашифрованные файлы
+//   Путь для проверки: ../tests/subdirsandfiles
+
+//Случай 11: Неверный пароль
+//   Путь для проверки: ../tests/encrypted
+//   Пароль: "wrongpassword"
+
+//Случай 12: Пустой ввод пути
+//   Путь для проверки: ""
+
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
+    qDebug()<<app.applicationDirPath();
 
     QString path;
 
@@ -26,6 +74,13 @@ int main(int argc, char *argv[])
     cout << "Enter path for folder: ";
     cout.flush();
     path = cin.readLine();
+
+    QFileInfo af(path);
+
+    qDebug()<<af.absoluteFilePath();
+
+    //return 0;
+
 
     //Создаем единственный экземпляр класса шифрования
     AesCryptTool& tool = AesCryptTool::Instance();
